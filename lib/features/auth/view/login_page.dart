@@ -5,7 +5,6 @@ import 'package:votechain/core/styles.dart';
 import 'package:votechain/database/db_helper.dart';
 import 'package:votechain/routes/router.dart';
 import 'package:votechain/widgets/custom_button.dart';
-import 'package:votechain/widgets/custom_text_field.dart';
 import 'package:web3dart/credentials.dart';
 
 @RoutePage()
@@ -36,10 +35,11 @@ class _LoginPageState extends State<LoginPage> {
               CustomButton(
                 text: 'Login',
                 onPressed: () {
-                  var hex = '0xf456b2b260b646040c933b3ba7741560afc84f3fe326e774b3e193aa5c3743b6';
+                  var hex =
+                      '0xf456b2b260b646040c933b3ba7741560afc84f3fe326e774b3e193aa5c3743b6';
                   hex = hex.trimLeft().trimRight();
                   DbHelper.privateKey = EthPrivateKey.fromHex(hex);
-                  AutoRouter.of(context).replace(const DashboardRoute());
+                  AutoRouter.of(context).replace(const NavigatorRoute());
                 },
                 width: double.infinity,
               ),
