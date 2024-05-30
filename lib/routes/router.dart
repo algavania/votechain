@@ -25,5 +25,10 @@ class AppRouter extends _$AppRouter {
           path: '/login',
           transitionsBuilder: TransitionsBuilders.fadeIn,
         ),
+        CustomRoute(
+          page: VoteRoute.page,
+          path: '/vote',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
       ];
 }

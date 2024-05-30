@@ -3,15 +3,16 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:sizer/sizer.dart';
 import 'package:votechain/core/app_text_styles.dart';
 import 'package:votechain/core/app_theme_data.dart';
+import 'package:votechain/database/shared_preferences_service.dart';
 import 'package:votechain/injector/injector.dart';
 import 'package:votechain/routes/router.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   Injector.init();
-
+  await SharedPreferencesService.init();
   await Injector.instance.allReady();
 
-  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 

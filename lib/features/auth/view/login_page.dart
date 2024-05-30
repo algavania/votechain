@@ -1,9 +1,15 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:sizer/sizer.dart';
 import 'package:votechain/core/styles.dart';
+import 'package:votechain/data/repository/contact_repository.dart';
+import 'package:votechain/database/data_helper.dart';
 import 'package:votechain/database/db_helper.dart';
+import 'package:votechain/database/shared_preferences_service.dart';
+import 'package:votechain/injector/injector.dart';
 import 'package:votechain/routes/router.dart';
+import 'package:votechain/utils/extensions.dart';
 import 'package:votechain/widgets/custom_button.dart';
 import 'package:votechain/widgets/custom_text_field.dart';
 import 'package:web3dart/credentials.dart';
@@ -18,6 +24,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _addressController = TextEditingController();
+  final _privateKeyController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -33,13 +40,35 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              CustomTextField(
+                controller: _addressController,
+                hintText: 'ETH Address',
+              ),
+              const SizedBox(height: Styles.defaultSpacing,),
+              CustomTextField(
+                controller: _privateKeyController,
+                hintText: 'Private Key',
+              ),
+              const SizedBox(height: Styles.bigSpacing,),
               CustomButton(
                 text: 'Login',
-                onPressed: () {
-                  var hex = '0xf456b2b260b646040c933b3ba7741560afc84f3fe326e774b3e193aa5c3743b6';
-                  hex = hex.trimLeft().trimRight();
-                  DbHelper.privateKey = EthPrivateKey.fromHex(hex);
-                  AutoRouter.of(context).replace(const DashboardRoute());
+                onPressed: () async {
+                  try {
+                    EasyLoading.show();
+                    final address = _addressController.text.trimLeft().trimRight();
+                    final hex = _privateKeyController.text.trimLeft().trimRight();
+                    DbHelper.privateKey = EthPrivateKey.fromHex(hex);
+                    DbHelper.ethAddress = address;
+                    SharedPreferencesService.setAddress(value: address);
+                    SharedPreferencesService.setPrivateKey(value: hex);
+                    DataHelper.candidates = await Injector.instance<ContractRepository>()
+                        .getCandidates();
+                    EasyLoading.dismiss();
+                    AutoRouter.of(context).replace(const DashboardRoute());
+                  } catch (e) {
+                    EasyLoading.dismiss();
+                    context.showSnackBar(message: e.toString(), isSuccess: false);
+                  }
                 },
                 width: double.infinity,
               ),
