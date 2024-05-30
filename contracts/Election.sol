@@ -26,7 +26,6 @@ contract Election {
         uint256 voteCount;
         bytes32 lastVoteHash;
         mapping(bytes32 => Vote) votes;
-        mapping(address => bool) voters;
     }
 
     struct Kelurahan {
@@ -56,6 +55,12 @@ contract Election {
         uint256 voteCount;
     }
 
+    struct User {
+        uint256 id;
+        address ethAddress;
+        bool isAdmin;
+    }
+
     mapping(uint256 => Candidate) public candidates;
     uint256 public candidatesCount;
 
@@ -74,6 +79,12 @@ contract Election {
     mapping(uint256 => Provinsi) public provinsiData;
     uint256 public provinsiCount;
 
+    mapping(address => User) public userData;
+    mapping(address => bool) public userExists;
+    mapping(address => bool) public voters; // Global voters mapping
+
+    uint256 public userCount;
+
     constructor() public {
         candidatesCount = 0;
         tpsCount = 0;
@@ -81,19 +92,18 @@ contract Election {
         kecamatanCount = 0;
         kotaCount = 0;
         provinsiCount = 0;
+        userCount = 0;
     }
 
-    function addCandidate(string memory _leadName,
-        string memory _viceName, string memory _imageUrl,
-        string memory _vision, string memory _mission) public {
+    function addCandidate(
+        string memory _leadName,
+        string memory _viceName,
+        string memory _imageUrl,
+        string memory _vision,
+        string memory _mission
+    ) public {
         candidatesCount++;
-        candidates[candidatesCount].id = candidatesCount;
-        candidates[candidatesCount].leadName = _leadName;
-        candidates[candidatesCount].viceName = _viceName;
-        candidates[candidatesCount].imageUrl = _imageUrl;
-        candidates[candidatesCount].vision = _vision;
-        candidates[candidatesCount].mission = _mission;
-        candidates[candidatesCount].voteCount = 0;
+        candidates[candidatesCount] = Candidate(candidatesCount, _leadName, _viceName, _imageUrl, _vision, _mission, 0);
     }
 
     function addTPS(string memory _name, uint256 _kelurahanId) public {
@@ -106,7 +116,7 @@ contract Election {
     }
 
     function vote(uint256 _candidateId, uint256 _tpsId) public {
-        require(!tpsData[_tpsId].voters[msg.sender], "You have already voted in this TPS");
+        require(!voters[msg.sender], "You have already voted"); // Global check
         require(_candidateId > 0 && _candidateId <= candidatesCount, "Invalid candidate ID");
 
         // Create the new vote
@@ -119,13 +129,13 @@ contract Election {
             previousVoteHash: previousVoteHash
         });
 
-// Record the vote
+        // Record the vote
         tpsData[_tpsId].votes[currentVoteHash] = newVote;
         tpsData[_tpsId].lastVoteHash = currentVoteHash;
         tpsData[_tpsId].voteCount++;
-        tpsData[_tpsId].voters[msg.sender] = true;
+        voters[msg.sender] = true; // Mark voter as having voted globally
 
-// Increment the candidate's vote count
+        // Increment the candidate's vote count
         candidates[_candidateId].voteCount++;
     }
 
@@ -147,6 +157,13 @@ contract Election {
     function addProvinsi(string memory _name) public {
         provinsiCount++;
         provinsiData[provinsiCount] = Provinsi(provinsiCount, _name, 0);
+    }
+
+    function addUser(address _ethAddress, bool _isAdmin) public {
+        require(!userExists[_ethAddress], "User already exists");
+        userCount++;
+        userData[_ethAddress] = User(userCount, _ethAddress, _isAdmin);
+        userExists[_ethAddress] = true;
     }
 
     function validateVotes(uint256 _tpsId) public view returns (bool) {
@@ -221,5 +238,26 @@ contract Election {
         }
 
         return votes;
+    }
+
+    function hasVoted(address _voter) public view returns (bool) {
+        return voters[_voter];
+    }
+
+    function getUsers() public view returns (User[] memory) {
+        User[] memory userList = new User[](userCount);
+        uint256 index = 0;
+
+        for (uint256 i = 1; i <= userCount; i++) {
+            if (userExists[userData[address(i)].ethAddress]) {
+                userList[index] = userData[address(i)];
+                index++;
+            }
+        }
+        return userList;
+    }
+
+    function checkIfUserExists(address _ethAddress) public view returns (bool) {
+        return userExists[_ethAddress];
     }
 }

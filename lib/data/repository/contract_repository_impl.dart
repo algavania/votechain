@@ -1,9 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:votechain/data/models/candidate_model.dart';
+import 'package:votechain/data/models/candidate/candidate_model.dart';
 import 'package:votechain/data/repository/contact_repository.dart';
 import 'package:votechain/database/db_helper.dart';
+import 'package:votechain/database/shared_preferences_service.dart';
 import 'package:votechain/utils/logger.dart';
 import 'package:web3dart/web3dart.dart';
 
@@ -45,7 +46,7 @@ class ContractRepositoryImpl extends ContractRepository {
 
   @override
   Future<void> addCandidate(CandidateModel candidate) async {
-    final privateKey = DbHelper.privateKey;
+    final privateKey = EthPrivateKey.fromHex(SharedPreferencesService.getPrivateKey()!);
     final function = DbHelper.contract!.function('addCandidate');
 
     final transaction = Transaction.callContract(
@@ -60,7 +61,7 @@ class ContractRepositoryImpl extends ContractRepository {
         ]);
     logger.d('private key ${privateKey.toString()}');
     final res = await DbHelper.ethClient.sendTransaction(
-      privateKey!,
+      privateKey,
       transaction,
       chainId: 1337,
     );
@@ -70,15 +71,8 @@ class ContractRepositoryImpl extends ContractRepository {
   @override
   Future<List<CandidateModel>> getCandidates() async {
     final list = <CandidateModel>[];
-    final privateKey = DbHelper.privateKey;
-    var address = privateKey!.address;
-    logger.d('address $address, private key $privateKey');
-    EtherAmount balance = await DbHelper.ethClient.getBalance(address);
-    logger.d(balance.getValueInUnit(EtherUnit.ether));
 
     final function = DbHelper.contract!.function('getCandidates');
-    logger
-        .d('Test ${function.parameters} ${function.name} ${function.outputs}');
 
     final res = await DbHelper.ethClient.call(
       contract: DbHelper.contract!,
@@ -98,5 +92,66 @@ class ContractRepositoryImpl extends ContractRepository {
     }
     logger.d('candidates $list');
     return list;
+  }
+
+  @override
+  Future<bool> checkIfHasVoted() async {
+    final function = DbHelper.contract!.function('hasVoted');
+
+    final res = await DbHelper.ethClient.call(
+      contract: DbHelper.contract!,
+      function: function,
+      params: [],
+    );
+    logger.d('res $res');
+    return res[0] ?? false;
+  }
+
+  @override
+  Future<CandidateModel> getWinner() async {
+    final function = DbHelper.contract!.function('getWinner');
+
+    final res = await DbHelper.ethClient.call(
+      contract: DbHelper.contract!,
+      function: function,
+      params: [],
+    );
+    final data = res[0];
+    final BigInt id = data[0];
+    final candidate = CandidateModel(
+        id: id.toInt(),
+        leadName: data[1],
+        viceName: data[2],
+        imageUrl: data[3],
+        vision: data[4],
+        mission: data[5]);
+
+    return candidate;
+  }
+
+  @override
+  Future<void> login(String address, String privateKey) async {
+    await SharedPreferencesService.setAddress(value: address);
+    await SharedPreferencesService.setPrivateKey(value: privateKey);
+  }
+
+  @override
+  Future<void> addUser(String ethAddress, bool isAdmin) async {
+    final privateKey = EthPrivateKey.fromHex(SharedPreferencesService.getPrivateKey()!);
+    final function = DbHelper.contract!.function('addUser');
+
+    final transaction = Transaction.callContract(
+        contract: DbHelper.contract!,
+        function: function,
+        parameters: [
+          EthereumAddress.fromHex(ethAddress),
+          isAdmin,
+        ]);
+    final res = await DbHelper.ethClient.sendTransaction(
+      privateKey,
+      transaction,
+      chainId: 1337,
+    );
+    logger.d('res $res');
   }
 }

@@ -1,4 +1,6 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:votechain/data/models/candidate/candidate_model.dart';
 
 import '../features/pages.dart';
 
@@ -74,6 +76,11 @@ class AppRouter extends _$AppRouter {
         CustomRoute(
           page: VoteRoute.page,
           path: '/vote',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
+        CustomRoute(
+          page: CandidateDetailRoute.page,
+          path: '/candidate-detail',
           transitionsBuilder: TransitionsBuilders.fadeIn,
         ),
       ];

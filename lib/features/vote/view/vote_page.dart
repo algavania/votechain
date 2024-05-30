@@ -1,13 +1,16 @@
-import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:sizer/sizer.dart';
+import 'package:votechain/bloc/contract_bloc.dart';
 import 'package:votechain/core/color_values.dart';
 import 'package:votechain/core/styles.dart';
-import 'package:votechain/data/models/candidate_model.dart';
-import 'package:votechain/database/data_helper.dart';
+import 'package:votechain/data/models/candidate/candidate_model.dart';
+import 'package:votechain/routes/router.dart';
 import 'package:votechain/utils/extensions.dart';
+import 'package:votechain/widgets/custom_alert_dialog.dart';
 import 'package:votechain/widgets/custom_button.dart';
 
 @RoutePage()
@@ -19,6 +22,14 @@ class VotePage extends StatefulWidget {
 }
 
 class _VotePageState extends State<VotePage> {
+  late final ContractBloc _bloc;
+
+  @override
+  void initState() {
+    _bloc = BlocProvider.of<ContractBloc>(context);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,9 +62,9 @@ class _VotePageState extends State<VotePage> {
           'Calon Presiden 2024',
           style: context.textTheme.titleMedium,
         ),
-        Text('${DataHelper.candidates.length} calon kandidat'),
+        Text('${_bloc.candidates.length} calon kandidat'),
         const SizedBox(
-          height: Styles.defaultSpacing,
+          height: Styles.biggerSpacing,
         ),
         _buildCandidateListWidget(),
       ],
@@ -65,17 +76,17 @@ class _VotePageState extends State<VotePage> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemBuilder: (_, i) =>
-            _buildCandidateItemWidget(DataHelper.candidates[i], i),
+            _buildCandidateItemWidget(_bloc.candidates[i], i),
         separatorBuilder: (_, __) => const SizedBox(
-              height: Styles.defaultSpacing,
+              height: Styles.biggerSpacing,
             ),
-        itemCount: DataHelper.candidates.length);
+        itemCount: _bloc.candidates.length);
   }
 
   Widget _buildCandidateItemWidget(CandidateModel candidate, int i) {
     return Container(
       decoration: BoxDecoration(
-        color: ColorValues.primary10,
+        color: ColorValues.info10,
         borderRadius: BorderRadius.circular(Styles.defaultBorder),
       ),
       padding: const EdgeInsets.all(Styles.defaultPadding),
@@ -97,7 +108,7 @@ class _VotePageState extends State<VotePage> {
             'Pasangan calon ${i + 1}\n${candidate.leadName} - ${candidate.viceName}',
             textAlign: TextAlign.center,
             style: context.textTheme.titleMedium
-                .copyWith(color: ColorValues.primary60),
+                .copyWith(color: ColorValues.info60),
           ),
           const SizedBox(
             height: Styles.defaultSpacing,
@@ -107,15 +118,28 @@ class _VotePageState extends State<VotePage> {
               CustomButton(
                 isOutlined: true,
                 text: 'Detail',
-                onPressed: () {},
+                textColor: ColorValues.primary60,
+                onPressed: () {
+                  AutoRouter.of(context).push(CandidateDetailRoute(candidate: candidate));
+                },
               ),
               const SizedBox(
-                width: Styles.defaultSpacing,
+                width: Styles.bigSpacing,
               ),
               Expanded(
                   child: CustomButton(
                 text: 'Vote',
-                onPressed: () {},
+                backgroundColor: ColorValues.primary60,
+                prefixIcon: Iconsax.medal_star,
+                onPressed: () {
+                  showDialog(context: context, builder: (_) => CustomAlertDialog(
+                    title: 'Konfirmasi',
+                    description: 'Apakah Anda yakin ingin memilih ${candidate.leadName} - ${candidate.viceName}?',
+                    proceedText: 'Ya',
+                    cancelText: 'Tidak',
+                    proceedAction: () {},
+                  ));
+                },
               ))
             ],
           )

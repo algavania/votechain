@@ -1,18 +1,14 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:sizer/sizer.dart';
+import 'package:votechain/bloc/contract_bloc.dart';
 import 'package:votechain/core/styles.dart';
-import 'package:votechain/data/repository/contact_repository.dart';
-import 'package:votechain/database/data_helper.dart';
-import 'package:votechain/database/db_helper.dart';
-import 'package:votechain/database/shared_preferences_service.dart';
-import 'package:votechain/injector/injector.dart';
 import 'package:votechain/routes/router.dart';
 import 'package:votechain/utils/extensions.dart';
 import 'package:votechain/widgets/custom_button.dart';
 import 'package:votechain/widgets/custom_text_field.dart';
-import 'package:web3dart/credentials.dart';
 
 @RoutePage()
 class LoginPage extends StatefulWidget {
@@ -29,50 +25,65 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('build test');
-    return Scaffold(
-      body: Container(
-        height: 100.h,
-        width: 100.w,
-        padding: const EdgeInsets.all(Styles.defaultPadding),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CustomTextField(
-                controller: _addressController,
-                hintText: 'ETH Address',
-              ),
-              const SizedBox(height: Styles.defaultSpacing,),
-              CustomTextField(
-                controller: _privateKeyController,
-                hintText: 'Private Key',
-              ),
-              const SizedBox(height: Styles.bigSpacing,),
-              CustomButton(
-                text: 'Login',
-                onPressed: () async {
-                  try {
-                    EasyLoading.show();
-                    final address = _addressController.text.trimLeft().trimRight();
-                    final hex = _privateKeyController.text.trimLeft().trimRight();
-                    DbHelper.privateKey = EthPrivateKey.fromHex(hex);
-                    DbHelper.ethAddress = address;
-                    SharedPreferencesService.setAddress(value: address);
-                    SharedPreferencesService.setPrivateKey(value: hex);
-                    DataHelper.candidates = await Injector.instance<ContractRepository>()
-                        .getCandidates();
-                    EasyLoading.dismiss();
-                    AutoRouter.of(context).replace(const DashboardRoute());
-                  } catch (e) {
-                    EasyLoading.dismiss();
-                    context.showSnackBar(message: e.toString(), isSuccess: false);
-                  }
-                },
-                width: double.infinity,
-              ),
-            ],
+    final bloc = BlocProvider.of<ContractBloc>(context);
+    return BlocListener<ContractBloc, ContractState>(
+      listener: (context, state) {
+        state.maybeMap(
+            loading: (s) {
+              context.loaderOverlay.show();
+            },
+            loaded: (s) {
+              context.loaderOverlay.hide();
+              AutoRouter.of(context).replace(const DashboardRoute());
+            },
+            error: (s) {
+              context.loaderOverlay.hide();
+              context.showSnackBar(message: s.message, isSuccess: false);
+            },
+            orElse: () {});
+      },
+      child: Scaffold(
+        body: Container(
+          height: 100.h,
+          width: 100.w,
+          padding: const EdgeInsets.all(Styles.defaultPadding),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CustomTextField(
+                  controller: _addressController,
+                  hintText: 'ETH Address',
+                  label: 'ETH Address',
+                  isRequired: true,
+                ),
+                const SizedBox(
+                  height: Styles.defaultSpacing,
+                ),
+                CustomTextField(
+                  controller: _privateKeyController,
+                  hintText: 'Private Key',
+                  label: 'Private Key',
+                  isRequired: true,
+                ),
+                const SizedBox(
+                  height: Styles.bigSpacing,
+                ),
+                CustomButton(
+                  text: 'Login',
+                  onPressed: () async {
+                    if (!(_formKey.currentState?.validate() ?? true)) return;
+                    final address =
+                        _addressController.text.trimLeft().trimRight();
+                    final hex =
+                        _privateKeyController.text.trimLeft().trimRight();
+                    bloc.add(ContractEvent.login(address, hex));
+                  },
+                  width: double.infinity,
+                ),
+              ],
+            ),
           ),
         ),
       ),
