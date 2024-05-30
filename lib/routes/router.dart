@@ -26,6 +26,52 @@ class AppRouter extends _$AppRouter {
           transitionsBuilder: TransitionsBuilders.fadeIn,
         ),
         CustomRoute(
+            page: NavigatorRoute.page,
+            path: '/navigator',
+            transitionsBuilder: TransitionsBuilders.fadeIn,
+            children: [
+              CustomRoute(
+                page: AdminDashboardRoute.page,
+                path: 'admin-dashboard',
+                transitionsBuilder: TransitionsBuilders.fadeIn,
+              ),
+              CustomRoute(
+                page: LocationRoute.page,
+                path: 'location',
+                transitionsBuilder: TransitionsBuilders.fadeIn,
+              ),
+              CustomRoute(
+                page: TpsRoute.page,
+                path: 'tps',
+                transitionsBuilder: TransitionsBuilders.fadeIn,
+              ),
+              CustomRoute(
+                page: CandidateRoute.page,
+                path: 'candidate',
+                transitionsBuilder: TransitionsBuilders.fadeIn,
+              ),
+            ]),
+        CustomRoute(
+          page: AddCandidateRoute.page,
+          path: '/add-candidate',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
+        CustomRoute(
+          page: AddLocationRoute.page,
+          path: '/add-location',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
+        CustomRoute(
+          page: AddVoterRoute.page,
+          path: '/add-voter',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
+        CustomRoute(
+          page: AddTpsRoute.page,
+          path: '/add-tps',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
+        CustomRoute(
           page: VoteRoute.page,
           path: '/vote',
           transitionsBuilder: TransitionsBuilders.fadeIn,

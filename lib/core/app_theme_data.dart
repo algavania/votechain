@@ -56,7 +56,7 @@ ThemeData votechainThemeData(BuildContext context) {
       labelTextStyle: MaterialStateProperty.resolveWith((states) {
         if (states.contains(MaterialState.selected)) {
           return const TextStyle(
-            color: ColorValues.primary50,
+            color: ColorValues.info50,
             fontSize: 13,
             height: 0,
             fontWeight: FontWeight.bold,
@@ -70,14 +70,14 @@ ThemeData votechainThemeData(BuildContext context) {
       }),
       iconTheme: MaterialStateProperty.resolveWith((states) {
         if (states.contains(MaterialState.selected)) {
-          return const IconThemeData(color: ColorValues.primary50);
+          return const IconThemeData(color: ColorValues.info50);
         }
         return const IconThemeData(color: ColorValues.grey20);
       }),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: ColorValues.primary50,
+        backgroundColor: ColorValues.info50,
         foregroundColor: ColorValues.secondaryText50,
         elevation: 0,
         padding: const EdgeInsets.all(Styles.contentPadding),

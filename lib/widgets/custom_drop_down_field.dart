@@ -4,45 +4,39 @@ import 'package:votechain/core/styles.dart';
 import 'package:votechain/utils/extensions.dart';
 import 'package:votechain/utils/validator.dart';
 
-class CustomTextField extends StatelessWidget {
-  const CustomTextField({
-    required this.controller,
+class CustomDropDownField extends StatelessWidget {
+  const CustomDropDownField({
     super.key,
+    required this.items,
+    this.value,
     this.hintText,
+    this.label,
     this.prefixIcon,
     this.fillColor,
-    this.borderWidth = 1,
-    this.label,
-    this.isRequired = true,
+    this.borderColor,
+    required this.borderWidth,
+    required this.isRequired,
     this.validator,
     this.onChanged,
-    this.maxCharacter,
-    this.maxLines = 1,
     this.style,
-    this.autofocus = false,
-    this.expands = false,
-    this.focusNode,
-    this.suffixIcon,
-    this.borderColor,
+    this.icon,
+    this.iconColor,
   });
 
-  final TextEditingController controller;
+  final List<DropdownMenuItem<String>> items;
+  final String? value;
   final String? hintText;
   final String? label;
   final IconData? prefixIcon;
-  final IconData? suffixIcon;
   final Color? fillColor;
   final Color? borderColor;
   final double borderWidth;
   final bool isRequired;
   final String? Function(String?)? validator;
   final void Function(String?)? onChanged;
-  final int? maxCharacter;
-  final int? maxLines;
   final TextStyle? style;
-  final bool autofocus;
-  final bool expands;
-  final FocusNode? focusNode;
+  final IconData? icon;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -56,35 +50,44 @@ class CustomTextField extends StatelessWidget {
         width: borderWidth,
       ),
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Styles.biggerPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (label != null)
-            Text(
-              label!,
-              style: context.textTheme.titleMedium,
-            ),
-          if (label != null)
-            const SizedBox(
-              height: Styles.defaultSpacing,
-            ),
-          TextFormField(
-            expands: expands,
-            focusNode: focusNode,
-            autofocus: autofocus,
-            maxLength: maxCharacter,
-            controller: controller,
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (label != null)
+          Text(
+            label!,
+            style: context.textTheme.titleMedium,
+          ),
+        if (label != null)
+          const SizedBox(
+            height: Styles.defaultSpacing,
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Styles.biggerPadding),
+          child: DropdownButtonFormField(
+            icon: icon == null
+                ? null
+                : Icon(
+                    icon,
+                    size: 24,
+                    color: iconColor,
+                  ),
+            iconEnabledColor: iconColor,
+            value: value,
+            items: items,
             onChanged: onChanged,
-            maxLines: maxLines,
             validator: isRequired
-                ? (validator ?? Validator(context: context).emptyValidator)
+                ? (validator ??
+                    (value) => Validator(context: context)
+                        .emptyValidator(value?.toString()))
                 : validator,
             style: style ?? context.textTheme.bodyMedium,
             decoration: InputDecoration(
               isDense: true,
               hintText: hintText,
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 12, horizontal: 10.0),
               filled: fillColor != null,
               fillColor: fillColor,
               hintStyle: context.textTheme.labelSmallThin,
@@ -111,22 +114,10 @@ class CustomTextField extends StatelessWidget {
                     ? Theme.of(context).primaryColor
                     : ColorValues.grey50,
               ),
-              suffixIcon: suffixIcon == null
-                  ? null
-                  : Icon(
-                      suffixIcon,
-                      size: 24,
-                      color: ColorValues.grey90,
-                    ),
-              suffixIconConstraints: suffixIcon == null
-                  ? null
-                  : const BoxConstraints(
-                      minWidth: 58,
-                    ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

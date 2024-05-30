@@ -78,7 +78,7 @@ class _VotePageState extends State<VotePage> {
         color: ColorValues.primary10,
         borderRadius: BorderRadius.circular(Styles.defaultBorder),
       ),
-      padding: EdgeInsets.all(Styles.defaultPadding),
+      padding: const EdgeInsets.all(Styles.defaultPadding),
       child: Column(
         children: [
           ClipRRect(
