@@ -1,14 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:votechain/features/candidate/view/candidate_page.dart';
-import 'package:votechain/features/location/view/location_page.dart';
-import 'package:votechain/features/navigator/view/navigator_page.dart';
-import 'package:votechain/features/tps/view/tps_page.dart';
-
-import '../features/add_candidate/add_candidate.dart';
-import '../features/add_location/add_location.dart';
-import '../features/add_tps/view/add_tps_page.dart';
-import '../features/add_voter/view/add_voter_page.dart';
-import '../features/admin_dashboard/admin_dashboard.dart';
 import '../features/pages.dart';
 
 part 'router.gr.dart';
@@ -78,6 +68,26 @@ class AppRouter extends _$AppRouter {
         CustomRoute(
           page: AddTpsRoute.page,
           path: '/add-tps',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
+        CustomRoute(
+          page: AddProvinceRoute.page,
+          path: '/add-province',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
+        CustomRoute(
+          page: AddCityRoute.page,
+          path: '/add-city',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
+        CustomRoute(
+          page: AddDistrictRoute.page,
+          path: '/add-district',
+          transitionsBuilder: TransitionsBuilders.fadeIn,
+        ),
+        CustomRoute(
+          page: AddSubDistrictRoute.page,
+          path: '/add-sub-district',
           transitionsBuilder: TransitionsBuilders.fadeIn,
         ),
       ];
