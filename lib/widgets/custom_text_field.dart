@@ -57,7 +57,7 @@ class CustomTextField extends StatelessWidget {
       ),
     );
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Styles.biggerPadding),
+      padding: const EdgeInsets.symmetric(horizontal: Styles.bigPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

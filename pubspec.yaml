@@ -48,3 +48,5 @@ flutter:
   assets:
     - src/artifacts/HelloWorld.json
     - src/artifacts/Election.json
+    - assets/
+    - assets/candidate/
