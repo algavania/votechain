@@ -45,4 +45,14 @@ class ColorValues {
   static const success30 = Color(0xFF6CCDAB);
   static const success20 = Color(0xFF9DDEC7);
   static const success10 = Color(0xFFCEEEE3);
+
+  static const info10 = Color(0xFFD7E9FD);
+  static const info20 = Color(0xFFAFD3FA);
+  static const info30 = Color(0xFF88BEF8);
+  static const info40 = Color(0xFF60A8F5);
+  static const info50 = Color(0xFF3892F3);
+  static const info60 = Color(0xFF2D75C2);
+  static const info70 = Color(0xFF225892);
+  static const info80 = Color(0xFF163A61);
+  static const info90 = Color(0xFF0B1D31);
 }
