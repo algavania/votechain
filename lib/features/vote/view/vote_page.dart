@@ -3,11 +3,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:sizer/sizer.dart';
 import 'package:votechain/bloc/contract_bloc.dart';
 import 'package:votechain/core/color_values.dart';
 import 'package:votechain/core/styles.dart';
 import 'package:votechain/data/models/candidate/candidate_model.dart';
+import 'package:votechain/data/models/tps/tps_model.dart';
 import 'package:votechain/routes/router.dart';
 import 'package:votechain/utils/extensions.dart';
 import 'package:votechain/widgets/custom_alert_dialog.dart';
@@ -32,7 +34,16 @@ class _VotePageState extends State<VotePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<ContractBloc, ContractState>(
+  listener: (context, state) {
+    state.maybeMap(
+        voteSuccess: (s) {
+          context.loaderOverlay.hide();
+          AutoRouter.of(context).maybePop();
+        },
+        orElse: () {});
+  },
+  child: Scaffold(
       appBar: AppBar(
         title: const Text('Voting'),
       ),
@@ -51,7 +62,8 @@ class _VotePageState extends State<VotePage> {
           ),
         ),
       ),
-    );
+    ),
+);
   }
 
   Widget _buildCandidateSectionWidget() {
@@ -137,7 +149,17 @@ class _VotePageState extends State<VotePage> {
                     description: 'Apakah Anda yakin ingin memilih ${candidate.leadName} - ${candidate.viceName}?',
                     proceedText: 'Ya',
                     cancelText: 'Tidak',
-                    proceedAction: () {},
+                    proceedAction: () {
+                      TPSModel dummyModel = const TPSModel(
+                        name: 'TPS 01',
+                        id: '350101200101',
+                        provinceId: '35',
+                        cityId: '3501',
+                        districtId: '350101',
+                        subDistrictId: '3501012001',
+                      );
+                      _bloc.add(ContractEvent.vote(candidate.id, dummyModel.id!));
+                    },
                   ));
                 },
               ))

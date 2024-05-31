@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:votechain/data/models/candidate/candidate_model.dart';
+import 'package:votechain/data/models/user/user_model.dart';
 import 'package:votechain/data/repository/contact_repository.dart';
 import 'package:votechain/database/shared_preferences_service.dart';
 import 'package:votechain/utils/logger.dart';
@@ -45,6 +46,9 @@ class ContractBloc extends Bloc<ContractEvent, ContractState> {
     on<_AddUser>(
       _onAddUser,
     );
+    on<_GetUserByAddress>(
+      _onGetUserByAddress,
+    );
 
   }
 
@@ -53,6 +57,21 @@ class ContractBloc extends Bloc<ContractEvent, ContractState> {
   bool hasVoted = false;
   EthPrivateKey? privateKey;
   String? address;
+
+  Future<void> _onGetUserByAddress(
+      _GetUserByAddress event,
+      Emitter<ContractState> emit,
+      ) async {
+    emit(const ContractState.loading());
+    try {
+      final user = await _repository.getUserByAddress(event.address);
+      if (user == null) throw 'User tidak ditemukan';
+      emit(ContractState.userLoaded(user));
+    } catch (e, s) {
+      logger.e(e.toString(), stackTrace: s);
+      emit(ContractState.error(e.toString()));
+    }
+  }
 
   Future<void> _onLogout(
       _Logout event,
@@ -161,6 +180,7 @@ class ContractBloc extends Bloc<ContractEvent, ContractState> {
     emit(const ContractState.loading());
     try {
       await _repository.vote(candidateId: event.candidateId, tpsId: event.tpsId);
+      hasVoted = true;
       emit(const ContractState.voteSuccess());
     } catch (e, s) {
       logger.e(e.toString(), stackTrace: s);

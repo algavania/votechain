@@ -5,6 +5,7 @@ import 'package:loader_overlay/loader_overlay.dart';
 import 'package:sizer/sizer.dart';
 import 'package:votechain/bloc/contract_bloc.dart';
 import 'package:votechain/core/styles.dart';
+import 'package:votechain/database/shared_preferences_service.dart';
 import 'package:votechain/routes/router.dart';
 import 'package:votechain/utils/extensions.dart';
 import 'package:votechain/widgets/custom_button.dart';
@@ -34,7 +35,12 @@ class _LoginPageState extends State<LoginPage> {
             },
             loaded: (s) {
               context.loaderOverlay.hide();
-              AutoRouter.of(context).replace(const DashboardRoute());
+              final user = SharedPreferencesService.getUser();
+              if (user!.isAdmin) {
+                AutoRouter.of(context).replace(const NavigatorRoute());
+              } else {
+                AutoRouter.of(context).replace(const DashboardRoute());
+              }
             },
             error: (s) {
               context.loaderOverlay.hide();

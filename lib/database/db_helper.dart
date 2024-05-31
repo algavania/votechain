@@ -2,8 +2,8 @@ import 'package:http/http.dart';
 import 'package:web3dart/web3dart.dart';
 
 class DbHelper {
-  static const rpcUrl = 'http://192.168.0.119:7545';
-  static const wsUrl = 'ws://192.168.0.119:7545';
+  static const rpcUrl = 'http://192.168.10.94:7545';
+  static const wsUrl = 'ws://192.168.10.94:7545';
 
   static DeployedContract? contract;
   static Credentials? userCredential;

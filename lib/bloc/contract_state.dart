@@ -10,4 +10,5 @@ class ContractState with _$ContractState {
   const factory ContractState.voteSuccess() = _VoteSuccess;
   const factory ContractState.error(String message) = _Error;
   const factory ContractState.winnerLoaded(CandidateModel candidate) = _WinnerLoaded;
+  const factory ContractState.userLoaded(UserModel user) = _UserLoaded;
 }

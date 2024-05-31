@@ -11,3 +11,4 @@ export 'candidate/candidate.dart';
 export 'location/location.dart';
 export 'navigator/navigator.dart';
 export 'tps/tps.dart';
+export 'pick_location/pick_location.dart';

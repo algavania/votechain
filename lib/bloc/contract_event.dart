@@ -9,7 +9,8 @@ class ContractEvent with _$ContractEvent {
   const factory ContractEvent.addUser(String ethAddress, bool isAdmin) = _AddUser;
   const factory ContractEvent.addCandidate(CandidateModel candidate) = _AddCandidate;
   const factory ContractEvent.getCandidates() = _GetCandidates;
-  const factory ContractEvent.vote(int candidateId, int tpsId) = _Vote;
+  const factory ContractEvent.vote(int candidateId, String tpsId) = _Vote;
   const factory ContractEvent.checkIfHasVoted() = _CheckIfHasVoted;
   const factory ContractEvent.getWinner(CandidateModel candidateModel) = _GetWinner;
+  const factory ContractEvent.getUserByAddress(String address) = _GetUserByAddress;
 }

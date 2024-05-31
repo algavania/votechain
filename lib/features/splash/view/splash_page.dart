@@ -28,8 +28,13 @@ class _SplashPageState extends State<SplashPage> {
       listener: (context, state) {
         state.maybeMap(
             loaded: (s) {
-              if (SharedPreferencesService.getPrivateKey() != null) {
-                AutoRouter.of(context).replace(const DashboardRoute());
+              final user = SharedPreferencesService.getUser();
+              if (user != null) {
+                if (user.isAdmin) {
+                  AutoRouter.of(context).replace(const NavigatorRoute());
+                } else {
+                  AutoRouter.of(context).replace(const DashboardRoute());
+                }
               } else {
                 AutoRouter.of(context).replace(const LoginRoute());
               }

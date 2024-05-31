@@ -1,5 +1,8 @@
 
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:votechain/data/models/user/user_model.dart';
 
 
 class SharedPreferencesService {
@@ -27,6 +30,15 @@ class SharedPreferencesService {
 
   static Future<void> setAddress({required String value}) async {
     await prefs?.setString('address', value);
+  }
+
+  static UserModel? getUser() {
+    final data = prefs?.getString('user');
+    return data == null ? null : UserModel.fromJson(jsonDecode(data));
+  }
+
+  static Future<void> setUser({required UserModel value}) async {
+    await prefs?.setString('user', jsonEncode(value.toJson()));
   }
 
 

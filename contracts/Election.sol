@@ -3,6 +3,8 @@ pragma solidity >=0.4.22 <0.9.0;
 pragma experimental ABIEncoderV2;
 
 contract Election {
+    uint256 constant private PAGE_SIZE = 15;
+
     struct Candidate {
         uint256 id;
         string leadName;
@@ -10,49 +12,12 @@ contract Election {
         string imageUrl;
         string vision;
         string mission;
-        uint256 voteCount;
     }
 
     struct Vote {
         uint256 candidateId;
         address voter;
         bytes32 previousVoteHash;
-    }
-
-    struct TPS {
-        uint256 id;
-        string name;
-        uint256 kelurahanId;
-        uint256 voteCount;
-        bytes32 lastVoteHash;
-        mapping(bytes32 => Vote) votes;
-    }
-
-    struct Kelurahan {
-        uint256 id;
-        string name;
-        uint256 kecamatanId;
-        uint256 voteCount;
-    }
-
-    struct Kecamatan {
-        uint256 id;
-        string name;
-        uint256 kotaId;
-        uint256 voteCount;
-    }
-
-    struct Kota {
-        uint256 id;
-        string name;
-        uint256 provinsiId;
-        uint256 voteCount;
-    }
-
-    struct Provinsi {
-        uint256 id;
-        string name;
-        uint256 voteCount;
     }
 
     struct User {
@@ -64,21 +29,10 @@ contract Election {
     mapping(uint256 => Candidate) public candidates;
     uint256 public candidatesCount;
 
-    mapping(uint256 => TPS) public tpsData;
-    uint256 public tpsCount;
-
-    mapping(uint256 => Kelurahan) public kelurahanData;
-    uint256 public kelurahanCount;
-
-    mapping(uint256 => Kecamatan) public kecamatanData;
-    uint256 public kecamatanCount;
-
-    mapping(uint256 => Kota) public kotaData;
-    uint256 public kotaCount;
-
-    mapping(uint256 => Provinsi) public provinsiData;
-    uint256 public provinsiCount;
-
+    mapping(string => Vote[]) public tpsData;
+    mapping(string => bool) public tpsTrack;
+    uint256 public tpsTrackCount;
+    string[] public tpsIds;
     mapping(address => User) public userData;
     mapping(address => bool) public userExists;
     mapping(address => bool) public voters; // Global voters mapping
@@ -87,12 +41,8 @@ contract Election {
 
     constructor() public {
         candidatesCount = 0;
-        tpsCount = 0;
-        kelurahanCount = 0;
-        kecamatanCount = 0;
-        kotaCount = 0;
-        provinsiCount = 0;
         userCount = 0;
+        tpsTrackCount = 0;
     }
 
     function addCandidate(
@@ -103,60 +53,17 @@ contract Election {
         string memory _mission
     ) public {
         candidatesCount++;
-        candidates[candidatesCount] = Candidate(candidatesCount, _leadName, _viceName, _imageUrl, _vision, _mission, 0);
+        candidates[candidatesCount] = Candidate(candidatesCount, _leadName, _viceName, _imageUrl, _vision, _mission);
     }
 
-    function addTPS(string memory _name, uint256 _kelurahanId) public {
-        tpsCount++;
-        tpsData[tpsCount].id = tpsCount;
-        tpsData[tpsCount].name = _name;
-        tpsData[tpsCount].kelurahanId = _kelurahanId;
-        tpsData[tpsCount].voteCount = 0;
-        tpsData[tpsCount].lastVoteHash = bytes32(0);
-    }
+    function getCandidates() public view returns (Candidate[] memory) {
+        Candidate[] memory candidateList = new Candidate[](candidatesCount);
 
-    function vote(uint256 _candidateId, uint256 _tpsId) public {
-        require(!voters[msg.sender], "You have already voted"); // Global check
-        require(_candidateId > 0 && _candidateId <= candidatesCount, "Invalid candidate ID");
+        for (uint256 i = 1; i <= candidatesCount; i++) {
+            candidateList[i - 1] = candidates[i];
+        }
 
-        // Create the new vote
-        bytes32 previousVoteHash = tpsData[_tpsId].lastVoteHash;
-        bytes32 currentVoteHash = keccak256(abi.encodePacked(_candidateId, msg.sender, previousVoteHash));
-
-        Vote memory newVote = Vote({
-            candidateId: _candidateId,
-            voter: msg.sender,
-            previousVoteHash: previousVoteHash
-        });
-
-        // Record the vote
-        tpsData[_tpsId].votes[currentVoteHash] = newVote;
-        tpsData[_tpsId].lastVoteHash = currentVoteHash;
-        tpsData[_tpsId].voteCount++;
-        voters[msg.sender] = true; // Mark voter as having voted globally
-
-        // Increment the candidate's vote count
-        candidates[_candidateId].voteCount++;
-    }
-
-    function addKelurahan(string memory _name, uint256 _kecamatanId) public {
-        kelurahanCount++;
-        kelurahanData[kelurahanCount] = Kelurahan(kelurahanCount, _name, _kecamatanId, 0);
-    }
-
-    function addKecamatan(string memory _name, uint256 _kotaId) public {
-        kecamatanCount++;
-        kecamatanData[kecamatanCount] = Kecamatan(kecamatanCount, _name, _kotaId, 0);
-    }
-
-    function addKota(string memory _name, uint256 _provinsiId) public {
-        kotaCount++;
-        kotaData[kotaCount] = Kota(kotaCount, _name, _provinsiId, 0);
-    }
-
-    function addProvinsi(string memory _name) public {
-        provinsiCount++;
-        provinsiData[provinsiCount] = Provinsi(provinsiCount, _name, 0);
+        return candidateList;
     }
 
     function addUser(address _ethAddress, bool _isAdmin) public {
@@ -166,89 +73,60 @@ contract Election {
         userExists[_ethAddress] = true;
     }
 
-    function validateVotes(uint256 _tpsId) public view returns (bool) {
-        uint256 voteCount = tpsData[_tpsId].voteCount;
+    function vote(uint256 _candidateId, string memory _tpsId) public {
+        require(!voters[msg.sender], "You have already voted"); // Global check
+        require(_candidateId > 0 && _candidateId <= candidatesCount, "Invalid candidate ID");
+
+        bytes32 previousVoteHash = bytes32(0);
+        if (tpsData[_tpsId].length > 0) {
+            previousVoteHash = tpsData[_tpsId][tpsData[_tpsId].length - 1].previousVoteHash;
+        }
+
+        bytes32 currentVoteHash = keccak256(abi.encodePacked(_candidateId, msg.sender, previousVoteHash));
+        Vote memory newVote = Vote({
+            candidateId: _candidateId,
+            voter: msg.sender,
+            previousVoteHash: previousVoteHash
+        });
+
+        if (tpsTrack[_tpsId] != true) {
+            tpsTrack[_tpsId] = true;
+            tpsIds.push(_tpsId);
+            tpsTrackCount++;
+        }
+
+        tpsData[_tpsId].push(newVote);
+        voters[msg.sender] = true; // Mark voter as having voted globally
+    }
+
+
+    function validateVotes(string memory _tpsId) public view returns (bool) {
+        uint256 voteCount = tpsData[_tpsId].length;
         uint256 validVotes = 0;
 
-        bytes32 currentHash = tpsData[_tpsId].lastVoteHash;
-        while (currentHash != bytes32(0)) {
-            Vote memory currentVote = tpsData[_tpsId].votes[currentHash];
+        for (uint256 i = 0; i < voteCount; i++) {
+            Vote memory currentVote = tpsData[_tpsId][i];
             bytes32 calculatedHash = keccak256(abi.encodePacked(currentVote.candidateId, currentVote.voter, currentVote.previousVoteHash));
-            if (calculatedHash == currentHash) {
+
+            if (calculatedHash == currentVote.previousVoteHash || i == 0) {
                 validVotes++;
             }
-            currentHash = currentVote.previousVoteHash;
         }
 
-        return validVotes >= (voteCount * 51) / 100;
+        return (validVotes * 100) >= (voteCount * 51); // Check if valid votes are more than 51% of total votes
     }
 
-    function calculateVotes() public {
-        for (uint256 i = 1; i <= tpsCount; i++) {
-            require(validateVotes(i), "TPS votes validation failed");
-            uint256 kelurahanId = tpsData[i].kelurahanId;
-            kelurahanData[kelurahanId].voteCount += tpsData[i].voteCount;
+    function getUsers(uint256 _page) public view returns (User[] memory) {
+        uint256 startIndex = (_page - 1) * PAGE_SIZE;
+        uint256 endIndex = startIndex + PAGE_SIZE;
+        if (endIndex > userCount) {
+            endIndex = userCount;
         }
 
-        for (uint256 i = 1; i <= kelurahanCount; i++) {
-            uint256 kecamatanId = kelurahanData[i].kecamatanId;
-            kecamatanData[kecamatanId].voteCount += kelurahanData[i].voteCount;
-        }
-
-        for (uint256 i = 1; i <= kecamatanCount; i++) {
-            uint256 kotaId = kecamatanData[i].kotaId;
-            kotaData[kotaId].voteCount += kecamatanData[i].voteCount;
-        }
-
-        for (uint256 i = 1; i <= kotaCount; i++) {
-            uint256 provinsiId = kotaData[i].provinsiId;
-            provinsiData[provinsiId].voteCount += kotaData[i].voteCount;
-        }
-    }
-
-    function getWinner() public returns (Candidate memory) {
-        calculateVotes();
-
-        Candidate memory winner = candidates[1];
-        for (uint256 i = 2; i <= candidatesCount; i++) {
-            if (candidates[i].voteCount > winner.voteCount) {
-                winner = candidates[i];
-            }
-        }
-
-        return winner;
-    }
-
-    function getCandidates() public view returns (Candidate[] memory) {
-        Candidate[] memory candidateList = new Candidate[](candidatesCount);
-        for (uint256 i = 1; i <= candidatesCount; i++) {
-            candidateList[i - 1] = candidates[i];
-        }
-        return candidateList;
-    }
-
-    function getTPSVotes(uint256 _tpsId) public view returns (Vote[] memory) {
-        uint256 voteCount = tpsData[_tpsId].voteCount;
-        Vote[] memory votes = new Vote[](voteCount);
-
-        bytes32 currentHash = tpsData[_tpsId].lastVoteHash;
-        for (uint256 i = voteCount; i > 0; i--) {
-            votes[i - 1] = tpsData[_tpsId].votes[currentHash];
-            currentHash = votes[i - 1].previousVoteHash;
-        }
-
-        return votes;
-    }
-
-    function hasVoted(address _voter) public view returns (bool) {
-        return voters[_voter];
-    }
-
-    function getUsers() public view returns (User[] memory) {
-        User[] memory userList = new User[](userCount);
+        User[] memory userList = new User[](endIndex - startIndex);
         uint256 index = 0;
 
-        for (uint256 i = 1; i <= userCount; i++) {
+        for (uint256 i = startIndex + 1; i <= endIndex; i++) {
             if (userExists[userData[address(i)].ethAddress]) {
                 userList[index] = userData[address(i)];
                 index++;
@@ -257,7 +135,43 @@ contract Election {
         return userList;
     }
 
-    function checkIfUserExists(address _ethAddress) public view returns (bool) {
-        return userExists[_ethAddress];
+    function getUserByAddress(address _ethAddress) public view returns (User memory) {
+        return userData[_ethAddress];
+    }
+
+    function getWinner() public view returns (Candidate memory) {
+        uint256 maxVotes = 0;
+        Candidate memory winningCandidate;
+
+        // Loop through each candidate
+        for (uint256 i = 1; i <= candidatesCount; i++) {
+            uint256 candidateVotes = 0;
+
+            // Loop through each TPS
+            for (uint256 j = 0; j < tpsTrackCount; j++) {
+                string storage tpsId = tpsIds[j];
+                uint256 voteCount = tpsData[tpsId].length;
+
+                // Validate votes in the TPS
+                if (!validateVotes(tpsId)) {
+                    revert("Invalid votes detected in TPS");
+                }
+
+                // Calculate the vote count for the candidate in this TPS
+                for (uint256 k = 0; k < voteCount; k++) {
+                    if (tpsData[tpsId][k].candidateId == i) {
+                        candidateVotes++;
+                    }
+                }
+            }
+
+            // Update winning candidate if necessary
+            if (candidateVotes > maxVotes) {
+                maxVotes = candidateVotes;
+                winningCandidate = candidates[i];
+            }
+        }
+
+        return winningCandidate;
     }
 }

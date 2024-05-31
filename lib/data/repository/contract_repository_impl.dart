@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:votechain/data/models/candidate/candidate_model.dart';
+import 'package:votechain/data/models/user/user_model.dart';
 import 'package:votechain/data/repository/contact_repository.dart';
 import 'package:votechain/database/db_helper.dart';
 import 'package:votechain/database/shared_preferences_service.dart';
@@ -21,7 +22,7 @@ class ContractRepositoryImpl extends ContractRepository {
 
   Future<void> getAbi() async {
     final abiStringFile =
-    await rootBundle.loadString('src/artifacts/Election.json');
+        await rootBundle.loadString('src/artifacts/Election.json');
     DbHelper.abi = jsonDecode(abiStringFile);
     logger.d('db helper abi true');
     DbHelper.contractAddress =
@@ -39,14 +40,32 @@ class ContractRepositoryImpl extends ContractRepository {
   @override
   Future<void> vote({
     required int candidateId,
-    required int tpsId,
-  }) {
-    throw UnimplementedError();
+    required String tpsId,
+  }) async {
+    final privateKey =
+    EthPrivateKey.fromHex(SharedPreferencesService.getPrivateKey()!);
+    final function = DbHelper.contract!.function('vote');
+
+    final transaction = Transaction.callContract(
+        contract: DbHelper.contract!,
+        function: function,
+        parameters: [
+          BigInt.from(candidateId),
+          tpsId,
+        ]);
+    logger.d('private key ${privateKey.toString()}');
+    final res = await DbHelper.ethClient.sendTransaction(
+      privateKey,
+      transaction,
+      chainId: 1337,
+    );
+    logger.d('res $res');
   }
 
   @override
   Future<void> addCandidate(CandidateModel candidate) async {
-    final privateKey = EthPrivateKey.fromHex(SharedPreferencesService.getPrivateKey()!);
+    final privateKey =
+        EthPrivateKey.fromHex(SharedPreferencesService.getPrivateKey()!);
     final function = DbHelper.contract!.function('addCandidate');
 
     final transaction = Transaction.callContract(
@@ -131,13 +150,17 @@ class ContractRepositoryImpl extends ContractRepository {
 
   @override
   Future<void> login(String address, String privateKey) async {
+    final user = await getUserByAddress(address);
+    if (user == null) throw 'User tidak ditemukan';
+    await SharedPreferencesService.setUser(value: user);
     await SharedPreferencesService.setAddress(value: address);
     await SharedPreferencesService.setPrivateKey(value: privateKey);
   }
 
   @override
   Future<void> addUser(String ethAddress, bool isAdmin) async {
-    final privateKey = EthPrivateKey.fromHex(SharedPreferencesService.getPrivateKey()!);
+    final privateKey =
+        EthPrivateKey.fromHex(SharedPreferencesService.getPrivateKey()!);
     final function = DbHelper.contract!.function('addUser');
 
     final transaction = Transaction.callContract(
@@ -153,5 +176,31 @@ class ContractRepositoryImpl extends ContractRepository {
       chainId: 1337,
     );
     logger.d('res $res');
+  }
+
+  @override
+  Future<UserModel?> getUserByAddress(String address) async {
+    final function = DbHelper.contract!.function('getUserByAddress');
+
+    final res = await DbHelper.ethClient.call(
+      contract: DbHelper.contract!,
+      function: function,
+      params: [EthereumAddress.fromHex(address)],
+    );
+    logger.d('res $res');
+    final data = res[0] as List<dynamic>;
+
+    if (data.isEmpty) return null;
+
+    final BigInt id = data[0];
+    if (id.toInt() == 0) return null;
+    final ethAddress = data[1] as EthereumAddress;
+    final candidate = UserModel(
+        id: id.toInt(),
+        ethAddress: ethAddress.hex,
+        isAdmin: data[2],
+    );
+
+    return candidate;
   }
 }
