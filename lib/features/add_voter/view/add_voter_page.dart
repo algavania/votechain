@@ -30,6 +30,7 @@ class _AddVoterPageState extends State<AddVoterPage> {
   final _districtController = TextEditingController();
   final _subDistrictController = TextEditingController();
   final _tpsController = TextEditingController();
+  final _controller = TextEditingController();
 
   ProvinceModel? _selectedProvince;
   CityModel? _selectedCity;
@@ -160,27 +161,24 @@ class _AddVoterPageState extends State<AddVoterPage> {
   }
 
   Widget _buildButtonSubmit(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Styles.defaultPadding),
-      child: CustomButton(
-        text: 'Tambah',
-        onPressed: () {
-          try {
-            final address = _addressController.text.trimLeft().trimRight();
-            if (address.isEmpty) {
-              throw 'Alamat Ethereum tidak boleh kosong';
-            }
-            BlocProvider.of<ContractBloc>(context).add(ContractEvent.addUser(address, false));
-          } catch (e) {
-            context.showSnackBar(message: e.toString(), isSuccess: false);
+    return CustomButton(
+      text: 'Tambah',
+      onPressed: () {
+        try {
+          final address = _addressController.text.trimLeft().trimRight();
+          if (address.isEmpty) {
+            throw 'Alamat Ethereum tidak boleh kosong';
           }
-        },
-        backgroundColor: ColorValues.info50,
-        width: MediaQuery
-            .of(context)
-            .size
-            .width,
-      ),
+          BlocProvider.of<ContractBloc>(context).add(ContractEvent.addUser(address, false));
+        } catch (e) {
+          context.showSnackBar(message: e.toString(), isSuccess: false);
+        }
+      },
+      backgroundColor: ColorValues.info50,
+      width: MediaQuery
+          .of(context)
+          .size
+          .width,
     );
   }
 }

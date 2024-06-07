@@ -24,7 +24,7 @@ class CustomTextField extends StatelessWidget {
     this.enabled = true,
     this.focusNode,
     this.suffixIcon,
-    this.borderColor,
+    this.borderColor, this.textInputType,
   });
 
   final TextEditingController controller;
@@ -45,6 +45,7 @@ class CustomTextField extends StatelessWidget {
   final bool expands;
   final bool enabled;
   final FocusNode? focusNode;
+  final TextInputType? textInputType;
 
   @override
   Widget build(BuildContext context) {
@@ -58,27 +59,24 @@ class CustomTextField extends StatelessWidget {
         width: borderWidth,
       ),
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Styles.biggerPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (label != null)
-            Text(
-              label!,
-              style: context.textTheme.titleMedium,
-            ),
-          if (label != null)
-            const SizedBox(
-              height: Styles.defaultSpacing,
-            ),
-          enabled
-              ? _buildBody(context, border)
-              : AbsorbPointer(
-                  child: _buildBody(context, border),
-                ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (label != null)
+          Text(
+            label!,
+            style: context.textTheme.titleMedium,
+          ),
+        if (label != null)
+          const SizedBox(
+            height: Styles.defaultSpacing,
+          ),
+        enabled
+            ? _buildBody(context, border)
+            : AbsorbPointer(
+                child: _buildBody(context, border),
+              ),
+      ],
     );
   }
 
@@ -92,6 +90,7 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       onChanged: onChanged,
       maxLines: maxLines,
+      keyboardType: textInputType,
       validator: isRequired
           ? (validator ?? Validator(context: context).emptyValidator)
           : validator,

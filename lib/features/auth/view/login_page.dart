@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:sizer/sizer.dart';
 import 'package:votechain/bloc/contract_bloc.dart';
+import 'package:votechain/core/color_values.dart';
 import 'package:votechain/core/styles.dart';
 import 'package:votechain/database/shared_preferences_service.dart';
 import 'package:votechain/routes/router.dart';
@@ -49,6 +50,7 @@ class _LoginPageState extends State<LoginPage> {
             orElse: () {});
       },
       child: Scaffold(
+        appBar: AppBar(title: const Text('Login'), backgroundColor: ColorValues.white,),
         body: Container(
           height: 100.h,
           width: 100.w,

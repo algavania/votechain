@@ -6,6 +6,7 @@ import 'package:votechain/core/color_values.dart';
 import 'package:votechain/core/styles.dart';
 import 'package:votechain/data/repository/contact_repository.dart';
 import 'package:votechain/injector/injector.dart';
+import 'package:votechain/widgets/custom_alert_dialog.dart';
 import 'package:votechain/widgets/custom_button_dashboard.dart';
 
 @RoutePage()
@@ -22,30 +23,27 @@ class AdminDashboardPage extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(child: _buildButtonAddLocation(context)),
-                const SizedBox(width: Styles.defaultSpacing,),
-                Expanded(child: _buildButtonAddTPS(context)),
-              ],
-            ),
-            const SizedBox(height: Styles.defaultSpacing,),
-            Row(
-              children: [
-                Expanded(child: _buildButtonAddCandidate(context)),
+                Expanded(
+                  child: CustomButtonDashboard(
+                    text: 'Pengumuman',
+                    prefixIcon: IconsaxPlusBold.location,
+                    backgroundColor: ColorValues.info10,
+                    textColor: ColorValues.info50,
+                    height: 96,
+                    onPressed: () async {
+                      final res = await Injector.instance<ContractRepository>().getWinner();
+                      showDialog(context: context, builder: (_) => CustomAlertDialog(
+                        title: 'Pemenang Pemilu',
+                        description: 'Pemenang adalah ${res.leadName} - ${res.viceName}',
+                      ));
+                    },
+                  ),
+                ),
                 const SizedBox(width: Styles.defaultSpacing,),
                 Expanded(child: _buildButtonAddVoters(context)),
               ],
             ),
             const SizedBox(height: Styles.defaultSpacing,),
-            CustomButtonDashboard(
-              text: 'Siapa menang?',
-              prefixIcon: IconsaxPlusBold.location,
-              backgroundColor: ColorValues.info10,
-              textColor: ColorValues.info50,
-              height: 96,
-              onPressed: () {
-                Injector.instance<ContractRepository>().getWinner();
-              },
-            )
           ],
         ),
       ),

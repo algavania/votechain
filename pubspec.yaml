@@ -53,7 +53,4 @@ flutter:
     - src/artifacts/HelloWorld.json
     - src/artifacts/Election.json
     - assets/
-    - assets/json/
-    - assets/json/kabupaten/
-    - assets/json/kecamatan/
-    - assets/json/kelurahan/
+    - assets/images/

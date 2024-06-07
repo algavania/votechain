@@ -41,8 +41,8 @@ class _NavigatorPageState extends State<NavigatorPage> {
         routes: const [
           AdminDashboardRoute(),
           LocationRoute(),
-          TpsRoute(),
-          CandidateRoute(),
+          // TpsRoute(),
+          // CandidateRoute(),
         ],
         builder: (context, child, _) {
           final tabsRouter = AutoTabsRouter.of(context);
@@ -103,14 +103,14 @@ class _NavigatorPageState extends State<NavigatorPage> {
                     icon: Icon(IconsaxPlusBold.location),
                     label: 'Lokasi',
                   ),
-                  NavigationDestination(
-                    icon: Icon(IconsaxPlusBold.flag),
-                    label: 'TPS',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.location_on),
-                    label: 'Kandidat',
-                  ),
+                  // NavigationDestination(
+                  //   icon: Icon(IconsaxPlusBold.flag),
+                  //   label: 'TPS',
+                  // ),
+                  // NavigationDestination(
+                  //   icon: Icon(Icons.location_on),
+                  //   label: 'Kandidat',
+                  // ),
                 ],
               ),
             ),

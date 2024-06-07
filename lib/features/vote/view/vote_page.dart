@@ -127,13 +127,15 @@ class _VotePageState extends State<VotePage> {
           ),
           Row(
             children: [
-              CustomButton(
-                isOutlined: true,
-                text: 'Detail',
-                textColor: ColorValues.primary60,
-                onPressed: () {
-                  AutoRouter.of(context).push(CandidateDetailRoute(candidate: candidate));
-                },
+              Expanded(
+                child: CustomButton(
+                  isOutlined: true,
+                  text: 'Detail',
+                  textColor: ColorValues.primary60,
+                  onPressed: () {
+                    AutoRouter.of(context).push(CandidateDetailRoute(candidate: candidate));
+                  },
+                ),
               ),
               const SizedBox(
                 width: Styles.bigSpacing,

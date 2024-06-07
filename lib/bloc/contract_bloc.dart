@@ -183,8 +183,9 @@ class ContractBloc extends Bloc<ContractEvent, ContractState> {
       hasVoted = true;
       emit(const ContractState.voteSuccess());
     } catch (e, s) {
-      logger.e(e.toString(), stackTrace: s);
-      emit(ContractState.error(e.toString()));
+      final message = e.toString();
+      final error = message.substring(message.indexOf('revert')+6, message.length-2);
+      emit(ContractState.error(error));
     }
   }
 
