@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:votechain/core/color_values.dart';
 import 'package:votechain/core/styles.dart';
 import 'package:votechain/widgets/custom_button.dart';
@@ -158,7 +157,7 @@ class AddTpsPage extends StatelessWidget {
           width: MediaQuery.of(context).size.width,
           text: 'Tambah',
           onPressed: () {
-            AutoRouter.of(context).pop();
+            AutoRouter.of(context).maybePop();
           }),
     );
   }

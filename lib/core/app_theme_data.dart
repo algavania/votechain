@@ -41,8 +41,8 @@ ThemeData votechainThemeData(BuildContext context) {
     useMaterial3: true,
     primaryColor: primaryColor,
     primarySwatch: primaryMaterialColor,
-    scaffoldBackgroundColor: ColorValues.lightGrey,
-    canvasColor: ColorValues.lightGrey,
+    scaffoldBackgroundColor: ColorValues.white,
+    canvasColor: ColorValues.white,
     brightness: Brightness.light,
     appBarTheme: const AppBarTheme(
       surfaceTintColor: Colors.transparent,

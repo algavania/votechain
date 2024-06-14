@@ -1,4 +1,11 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:votechain/data/models/candidate/candidate_model.dart';
+import 'package:votechain/data/models/city/city_model.dart';
+import 'package:votechain/data/models/district/district_model.dart';
+import 'package:votechain/data/models/province/province_model.dart';
+import 'package:votechain/data/models/subdistrict/sub_district_model.dart';
+
 import '../features/pages.dart';
 
 part 'router.gr.dart';
@@ -71,23 +78,18 @@ class AppRouter extends _$AppRouter {
           transitionsBuilder: TransitionsBuilders.fadeIn,
         ),
         CustomRoute(
-          page: AddProvinceRoute.page,
-          path: '/add-province',
+          page: VoteRoute.page,
+          path: '/vote',
           transitionsBuilder: TransitionsBuilders.fadeIn,
         ),
         CustomRoute(
-          page: AddCityRoute.page,
-          path: '/add-city',
+          page: CandidateDetailRoute.page,
+          path: '/candidate-detail',
           transitionsBuilder: TransitionsBuilders.fadeIn,
         ),
         CustomRoute(
-          page: AddDistrictRoute.page,
-          path: '/add-district',
-          transitionsBuilder: TransitionsBuilders.fadeIn,
-        ),
-        CustomRoute(
-          page: AddSubDistrictRoute.page,
-          path: '/add-sub-district',
+          page: PickLocationRoute.page,
+          path: '/pick-location',
           transitionsBuilder: TransitionsBuilders.fadeIn,
         ),
       ];

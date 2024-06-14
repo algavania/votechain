@@ -1,6 +1,7 @@
-
-import 'package:votechain/features/contract/data/repository/contact_repository.dart';
-import 'package:votechain/features/contract/data/repository/contract_repository_impl.dart';
+import 'package:votechain/data/repository/contact_repository.dart';
+import 'package:votechain/data/repository/contract_repository_impl.dart';
+import 'package:votechain/features/pick_location/data/repository/location_repository.dart';
+import 'package:votechain/features/pick_location/data/repository/location_repository_impl.dart';
 import 'package:votechain/injector/injector.dart';
 
 class RepositoryModule {
@@ -8,8 +9,11 @@ class RepositoryModule {
 
   static void init() {
     Injector.instance
-      .registerFactory<ContractRepository>(
+      ..registerFactory<ContractRepository>(
         ContractRepositoryImpl.new,
+      )
+      ..registerFactory<LocationRepository>(
+        LocationRepositoryImpl.new,
       );
   }
 }

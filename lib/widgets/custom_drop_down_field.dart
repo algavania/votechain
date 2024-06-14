@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:votechain/core/color_values.dart';
 import 'package:votechain/core/styles.dart';
 import 'package:votechain/utils/extensions.dart';

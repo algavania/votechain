@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:votechain/core/color_values.dart';
 import 'package:votechain/core/styles.dart';
-import 'package:votechain/widgets/custom_button.dart';
 
 class CustomButtonDashboard extends StatelessWidget {
   const CustomButtonDashboard({

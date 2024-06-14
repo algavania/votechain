@@ -1,9 +1,12 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:votechain/core/color_values.dart';
 import 'package:votechain/core/styles.dart';
-import 'package:votechain/widgets/custom_button.dart';
+import 'package:votechain/data/repository/contact_repository.dart';
+import 'package:votechain/injector/injector.dart';
+import 'package:votechain/widgets/custom_alert_dialog.dart';
 import 'package:votechain/widgets/custom_button_dashboard.dart';
 
 @RoutePage()
@@ -12,41 +15,36 @@ class AdminDashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Center(
-          child: Text('Admin Dashboard'),
-        ),
-        automaticallyImplyLeading: false,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Styles.biggerPadding),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                children: [
-                  Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Styles.defaultPadding,
-                        vertical: Styles.defaultPadding,
-                      ),
-                      child: _buildButtonAddLocation(context)),
-                  _buildButtonAddTPS(context),
-                ],
-              ),
-              Row(
-                children: [
-                  Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: Styles.defaultPadding),
-                      child: _buildButtonAddCandidate(context)),
-                  _buildButtonAddVoters(context),
-                ],
-              ),
-            ],
-          ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Styles.biggerPadding),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: CustomButtonDashboard(
+                    text: 'Pengumuman',
+                    prefixIcon: IconsaxPlusBold.location,
+                    backgroundColor: ColorValues.info10,
+                    textColor: ColorValues.info50,
+                    height: 96,
+                    onPressed: () async {
+                      final res = await Injector.instance<ContractRepository>().getWinner();
+                      showDialog(context: context, builder: (_) => CustomAlertDialog(
+                        title: 'Pemenang Pemilu',
+                        description: 'Pemenang adalah ${res.leadName} - ${res.viceName}',
+                      ));
+                    },
+                  ),
+                ),
+                const SizedBox(width: Styles.defaultSpacing,),
+                Expanded(child: _buildButtonAddVoters(context)),
+              ],
+            ),
+            const SizedBox(height: Styles.defaultSpacing,),
+          ],
         ),
       ),
     );
@@ -59,7 +57,6 @@ class AdminDashboardPage extends StatelessWidget {
       backgroundColor: ColorValues.info10,
       textColor: ColorValues.info50,
       height: 96,
-      width: 144,
       onPressed: () {
         AutoRouter.of(context).pushNamed('/add-location');
       },
@@ -73,7 +70,6 @@ class AdminDashboardPage extends StatelessWidget {
       backgroundColor: ColorValues.info10,
       textColor: ColorValues.info50,
       height: 96,
-      width: 144,
       onPressed: () {
         AutoRouter.of(context).pushNamed('/add-tps');
       },
@@ -87,7 +83,6 @@ class AdminDashboardPage extends StatelessWidget {
       backgroundColor: ColorValues.info10,
       textColor: ColorValues.info50,
       height: 96,
-      width: 144,
       onPressed: () {
         AutoRouter.of(context).pushNamed('/add-candidate');
       },
@@ -101,7 +96,6 @@ class AdminDashboardPage extends StatelessWidget {
       backgroundColor: ColorValues.info10,
       textColor: ColorValues.info50,
       height: 96,
-      width: 144,
       onPressed: () {
         AutoRouter.of(context).pushNamed('/add-voter');
       },

@@ -3,142 +3,188 @@ pragma solidity >=0.4.22 <0.9.0;
 pragma experimental ABIEncoderV2;
 
 contract Election {
-  struct Candidate {
-    uint id;
-    string leadName;
-    string viceName;
-    string vision;
-    string mission;
-    uint voteCount;
-  }
+    uint256 constant private PAGE_SIZE = 15;
 
-  struct TPS {
-    uint id;
-    string name;
-    mapping(address => bool) voters;
-    uint voterCount;
-  }
-
-  struct Kelurahan {
-    uint id;
-    string name;
-    mapping(uint => TPS) tpsList;
-    uint tpsCount;
-  }
-
-  struct Kecamatan {
-    uint id;
-    string name;
-    mapping(uint => Kelurahan) kelurahanList;
-    uint kelurahanCount;
-  }
-
-  struct KabupatenKota {
-    uint id;
-    string name;
-    mapping(uint => Kecamatan) kecamatanList;
-    uint kecamatanCount;
-  }
-
-  struct Provinsi {
-    uint id;
-    string name;
-    mapping(uint => KabupatenKota) kabupatenKotaList;
-    uint kabupatenKotaCount;
-  }
-
-  mapping(uint => Provinsi) public provinsiList;
-  uint public provinsiCount;
-  mapping(uint => Candidate) public candidates;
-  uint public candidatesCount;
-
-  mapping(address => bool) public hasVoted;
-
-  function addCandidate(
-    string memory leadName,
-    string memory viceName,
-    string memory vision,
-    string memory mission
-  ) public {
-    candidatesCount++;
-    candidates[candidatesCount] = Candidate(
-      candidatesCount,
-      leadName,
-      viceName,
-      vision,
-      mission,
-      0
-    );
-  }
-
-  function getCandidates() public view returns (Candidate[] memory) {
-    Candidate[] memory candidateList = new Candidate[](candidatesCount);
-    for (uint i = 0; i < candidatesCount; i++) {
-      candidateList[i] = candidates[i];
+    struct Candidate {
+        uint256 id;
+        string leadName;
+        string viceName;
+        string imageUrl;
+        string vision;
+        string mission;
     }
-    return candidateList;
-  }
 
-  function getTesting() public view returns (bool) {
-    return false;
-  }
+    struct Vote {
+        uint256 candidateId;
+        address voter;
+        bytes32 previousVoteHash;
+    }
 
-  function addTPS(uint kelurahanId, uint kecamatanId, uint kabupatenKotaId, uint provinsiId, string memory name) public {
-    Provinsi storage provinsi = provinsiList[provinsiId];
-    KabupatenKota storage kabupatenKota = provinsi.kabupatenKotaList[kabupatenKotaId];
-    Kecamatan storage kecamatan = kabupatenKota.kecamatanList[kecamatanId];
-    Kelurahan storage kelurahan = kecamatan.kelurahanList[kelurahanId];
+    struct User {
+        uint256 id;
+        address ethAddress;
+        bool isAdmin;
+    }
 
-    kelurahan.tpsCount++;
-    kelurahan.tpsList[kelurahan.tpsCount] = TPS(kelurahan.tpsCount, name, 0);
-  }
+    mapping(uint256 => Candidate) public candidates;
+    uint256 public candidatesCount;
 
-  function addKelurahan(uint kecamatanId, uint kabupatenKotaId, uint provinsiId, string memory name) public {
-    Provinsi storage provinsi = provinsiList[provinsiId];
-    KabupatenKota storage kabupatenKota = provinsi.kabupatenKotaList[kabupatenKotaId];
-    Kecamatan storage kecamatan = kabupatenKota.kecamatanList[kecamatanId];
+    mapping(string => Vote[]) public tpsData;
+    mapping(string => bool) public tpsTrack;
+    uint256 public tpsTrackCount;
+    string[] public tpsIds;
+    mapping(address => User) public userData;
+    mapping(address => bool) public userExists;
+    mapping(address => bool) public voters; // Global voters mapping
 
-    kecamatan.kelurahanCount++;
-    kecamatan.kelurahanList[kecamatan.kelurahanCount] = Kelurahan(kecamatan.kelurahanCount, name, 0);
-  }
+    uint256 public userCount;
 
-  function addKecamatan(uint kabupatenKotaId, uint provinsiId, string memory name) public {
-    Provinsi storage provinsi = provinsiList[provinsiId];
-    KabupatenKota storage kabupatenKota = provinsi.kabupatenKotaList[kabupatenKotaId];
+    constructor() public {
+        candidatesCount = 0;
+        userCount = 0;
+        tpsTrackCount = 0;
+    }
 
-    kabupatenKota.kecamatanCount++;
-    kabupatenKota.kecamatanList[kabupatenKota.kecamatanCount] = Kecamatan(kabupatenKota.kecamatanCount, name, 0);
-  }
+    function addCandidate(
+        string memory _leadName,
+        string memory _viceName,
+        string memory _imageUrl,
+        string memory _vision,
+        string memory _mission
+    ) public {
+        candidatesCount++;
+        candidates[candidatesCount] = Candidate(candidatesCount, _leadName, _viceName, _imageUrl, _vision, _mission);
+    }
 
-  function addKabupatenKota(uint provinsiId, string memory name) public {
-    Provinsi storage provinsi = provinsiList[provinsiId];
+    function getCandidates() public view returns (Candidate[] memory) {
+        Candidate[] memory candidateList = new Candidate[](candidatesCount);
 
-    provinsi.kabupatenKotaCount++;
-    provinsi.kabupatenKotaList[provinsi.kabupatenKotaCount] = KabupatenKota(provinsi.kabupatenKotaCount, name, 0);
-  }
+        for (uint256 i = 1; i <= candidatesCount; i++) {
+            candidateList[i - 1] = candidates[i];
+        }
 
-  function addProvinsi(string memory name) public {
-    provinsiCount++;
-    provinsiList[provinsiCount] = Provinsi(provinsiCount, name, 0);
-  }
+        return candidateList;
+    }
 
-  function vote(uint candidateId, uint tpsId, uint kelurahanId, uint kecamatanId, uint kabupatenKotaId, uint provinsiId) public {
-    require(!hasVoted[msg.sender], "You have already voted in this election");
+    function addUser(address _ethAddress, bool _isAdmin) public {
+        require(!userExists[_ethAddress], "User already exists");
+        userCount++;
+        userData[_ethAddress] = User(userCount, _ethAddress, _isAdmin);
+        userExists[_ethAddress] = true;
+    }
 
-    Candidate storage candidate = candidates[candidateId];
+    function vote(uint256 _candidateId, string memory _tpsId) public {
+        require(!voters[msg.sender], "You have already voted"); // Global check
+        require(_candidateId > 0 && _candidateId <= candidatesCount, "Invalid candidate ID");
 
-    Provinsi storage provinsi = provinsiList[provinsiId];
-    KabupatenKota storage kabupatenKota = provinsi.kabupatenKotaList[kabupatenKotaId];
-    Kecamatan storage kecamatan = kabupatenKota.kecamatanList[kecamatanId];
-    Kelurahan storage kelurahan = kecamatan.kelurahanList[kelurahanId];
-    TPS storage tps = kelurahan.tpsList[tpsId];
+        bytes32 previousVoteHash = bytes32(0);
+        if (tpsData[_tpsId].length > 0) {
+            previousVoteHash = tpsData[_tpsId][tpsData[_tpsId].length - 1].previousVoteHash;
+        }
 
-    require(!tps.voters[msg.sender], "You have already voted in this TPS");
+        bytes32 currentVoteHash = keccak256(abi.encodePacked(_candidateId, msg.sender, previousVoteHash));
+        Vote memory newVote = Vote({
+            candidateId: _candidateId,
+            voter: msg.sender,
+            previousVoteHash: previousVoteHash
+        });
 
-    tps.voters[msg.sender] = true;
-    tps.voterCount++;
-    candidate.voteCount++;
+        if (tpsTrack[_tpsId] != true) {
+            tpsTrack[_tpsId] = true;
+            tpsIds.push(_tpsId);
+            tpsTrackCount++;
+        }
 
-    hasVoted[msg.sender] = true;
-  }
+        tpsData[_tpsId].push(newVote);
+        voters[msg.sender] = true; // Mark voter as having voted globally
+    }
+
+
+    function validateVotes(string memory _tpsId) public view returns (bool) {
+        uint256 voteCount = tpsData[_tpsId].length;
+        uint256 validVotes = 0;
+
+        for (uint256 i = 0; i < voteCount; i++) {
+            Vote memory currentVote = tpsData[_tpsId][i];
+            bytes32 calculatedHash = keccak256(abi.encodePacked(currentVote.candidateId, currentVote.voter, currentVote.previousVoteHash));
+
+            if (calculatedHash == currentVote.previousVoteHash || i == 0) {
+                validVotes++;
+            }
+        }
+
+        return (validVotes * 100) >= (voteCount * 51); // Check if valid votes are more than 51% of total votes
+    }
+
+    function getUsers(uint256 _page) public view returns (User[] memory) {
+        uint256 startIndex = (_page - 1) * PAGE_SIZE;
+        uint256 endIndex = startIndex + PAGE_SIZE;
+        if (endIndex > userCount) {
+            endIndex = userCount;
+        }
+
+        User[] memory userList = new User[](endIndex - startIndex);
+        uint256 index = 0;
+
+        for (uint256 i = startIndex + 1; i <= endIndex; i++) {
+            if (userExists[userData[address(i)].ethAddress]) {
+                userList[index] = userData[address(i)];
+                index++;
+            }
+        }
+        return userList;
+    }
+
+    function getUserByAddress(address _ethAddress) public view returns (User memory) {
+        return userData[_ethAddress];
+    }
+
+    function getWinner() public view returns (Candidate memory) {
+        uint256 maxVotes = 0;
+        Candidate memory winningCandidate;
+
+        // Loop through each candidate
+        for (uint256 i = 1; i <= candidatesCount; i++) {
+            uint256 candidateVotes = 0;
+
+            // Loop through each TPS
+            for (uint256 j = 0; j < tpsTrackCount; j++) {
+                string storage tpsId = tpsIds[j];
+                uint256 voteCount = tpsData[tpsId].length;
+
+                // Validate votes in the TPS
+                if (!validateVotes(tpsId)) {
+                    revert("Invalid votes detected in TPS");
+                }
+
+                // Calculate the vote count for the candidate in this TPS
+                for (uint256 k = 0; k < voteCount; k++) {
+                    if (tpsData[tpsId][k].candidateId == i) {
+                        candidateVotes++;
+                    }
+                }
+            }
+
+            // Update winning candidate if necessary
+            if (candidateVotes > maxVotes) {
+                maxVotes = candidateVotes;
+                winningCandidate = candidates[i];
+            }
+        }
+
+        return winningCandidate;
+    }
 }
+
+
+0x7cBC9035158CE0E609DD617dABd03Bb03CDc125d
+0x1078bff4f806bb677ddc47f35a13f0cfc13b3e7332c7661e565ef97ff96228a1
+
+0x4b0e3a76300C103F71e306301F8D46b958351038
+0x42938cf0b1e76dfc2f1bb99c05d916671c1a63a39b5390d8a81704eccdcd0ae2
+
+0x321d31E3d57C1E942992C4Fbd0fa5015a3d61097
+0x2ae5699dd1df765b5ff052d9848880809574a178d546f00b2433165de60cb84c
+
+0x27E4F4d54d9e98Be38038fdE396203960bf7e1D4
+0x46f5096cedd7c5e96614eab6d801bfae7ef046b2fe0946c836141df463824cfe
